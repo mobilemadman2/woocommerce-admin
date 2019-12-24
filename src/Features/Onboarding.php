@@ -325,6 +325,7 @@ class Onboarding {
 				$product_types[ $key ]['label']      .= sprintf( __( ' — %s per year', 'woocommerce-admin' ), html_entity_decode( $products[ $product_type['product'] ]->price ) );
 				$product_types[ $key ]['description'] = $products[ $product_type['product'] ]->excerpt;
 				$product_types[ $key ]['more_url']    = $products[ $product_type['product'] ]->link;
+				$product_types[ $key ]['slug']        = strtolower( preg_replace( '~[^\pL\d]+~u', '-', $products[ $product_type['product'] ]->slug ) );
 			} elseif ( isset( $product_type['product'] ) ) {
 				/* translators: site currency symbol (used to show that the product costs money) */
 				$product_types[ $key ]['label'] .= sprintf( __( ' — %s', 'woocommerce-admin' ), html_entity_decode( get_woocommerce_currency_symbol() ) );
@@ -366,6 +367,7 @@ class Onboarding {
 		// Only fetch if the onboarding wizard OR the task list is incomplete.
 		if ( self::should_show_profiler() || self::should_show_tasks() ) {
 			$settings['onboarding']['activePlugins']            = self::get_active_plugins();
+			$settings['onboarding']['installedPlugins']         = self::get_installed_plugins();
 			$settings['onboarding']['stripeSupportedCountries'] = self::get_stripe_supported_countries();
 			$settings['onboarding']['euCountries']              = WC()->countries->get_european_union_countries();
 			$settings['onboarding']['connectNonce']             = wp_create_nonce( 'connect' );
@@ -513,6 +515,21 @@ class Onboarding {
 			$active_plugins[] = $slug;
 		}
 		return $active_plugins;
+	}
+
+	/**
+	 * Get an array of installed plugin slugs.
+	 *
+	 * @return array
+	 */
+	public static function get_installed_plugins() {
+		return array_map(
+			function( $plugin_path ) {
+				$path_parts = explode( '/', $plugin_path );
+				return $path_parts[0];
+			},
+			array_keys( get_plugins() )
+		);
 	}
 
 	/**
